@@ -64,6 +64,12 @@ function MWIIHUD.NeededStuff()
             ["$translucent"] = "1"
         } 
     )
+    if file.Exists("mwiiweaponiconoffsets.txt", "DATA") then
+        MWIIHUD.WeaponIconOffset = util.JSONToTable(util.Decompress(file.Read("mwiiweaponiconoffsets.txt", "DATA")))
+        print("Loaded weapon icon offset data.")
+    else
+        print("No stored weapon icon offset data found.")
+    end
 
     surface.CreateFont("hl2wepicon", {
         font = 'halflife2',
@@ -88,6 +94,18 @@ MWIIHUD.NeededStuff()
 
 local function doNothing() end
 function MWIIHUD.DrawWeaponIconToRT(Weapon, x, y, width, h)
+    local scale = math.Round(scale)
+    local class = Weapon:GetClass()
+    if MWIIHUD.WeaponIconOffset[class] then
+        local scalemod = MWIIHUD.WeaponIconOffset[class][3]
+        x = x + MWIIHUD.WeaponIconOffset[class][1] * scale + (width / 2 * (1 - scalemod))
+        y = y - MWIIHUD.WeaponIconOffset[class][2] * scale + (h / 2 * (1 - scalemod))
+        width = width * scalemod
+        h = h * scalemod
+    end
+
+    if GetConVar("developer"):GetBool() then PrintTable(MWIIHUD.WeaponIconOffset) end
+
     render.PushRenderTarget(MWIIHUD.WeaponIconRT)
     cam.Start2D()
     render.Clear(0,0,0,0,true,true)
@@ -122,9 +140,6 @@ function MWIIHUD.MainHook()
         --MWIIHUD.Compass()
         MWIIHUD.Ammo()
     end
-
-    PrintTable(hook.GetTable()["CalcView"])
-    print(" ")
 end
 
 function MWIIHUD.Ammo()
@@ -145,9 +160,15 @@ hook.Add("HUDShouldDraw", "MWIIHideCHud", function(name)
     if MWIIHUD.Toggle:GetBool() and MWIIHUD.HideCElements[name] and GetConVar("cl_drawhud"):GetBool() then return false end
 end)
 hook.Add("HUDPaint", "MWIIHUDDraw", MWIIHUD.MainHook)
+hook.Add("OnScreenSizeChanged", "MWIIHUDResChange", MWIIHUD.NeededStuff)
 
---concommand.Add("MWII_AddIconOffsetForWeapon", function(x, y, scale)
---end)
+concommand.Add("MWII_SetIconOffsetForWeapon", function(ply, cmd, args)
+    PrintTable(args)
+    local x, y, scl = args
+    MWIIHUD.WeaponIconOffset[LocalPlayer():GetActiveWeapon():GetClass()] = x, y, scl
+    local state = file.Write("mwiiweaponiconoffsets.txt", util.Compress(util.TableToJSON(MWIIHUD.WeaponIconOffset)))
+    print(state and "Weapon icon offset data written to disk." or "oh fuck")
+end)
 
 print("MWII HUD loaded." .. SysTime())
 PrintTable(MWIIHUD.Assets.Reference)
