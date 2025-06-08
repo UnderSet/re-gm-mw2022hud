@@ -104,7 +104,10 @@ function MWIIHUD.DrawWeaponIconToRT(Weapon, x, y, width, h)
         h = h * scalemod
     end
 
-    if GetConVar("developer"):GetBool() then PrintTable(MWIIHUD.WeaponIconOffset) end
+    if GetConVar("developer"):GetBool() then 
+        PrintTable(MWIIHUD.WeaponIconOffset) 
+        print(" ")
+    end
 
     render.PushRenderTarget(MWIIHUD.WeaponIconRT)
     cam.Start2D()
@@ -152,8 +155,13 @@ function MWIIHUD.Ammo()
     MWIIHUD.DrawWeaponIconToRT(LocalPlayer():GetActiveWeapon(),0, 0,1024 * math.Round(scale),512 * math.Round(scale))
     surface.SetMaterial(MWIIHUD.WeaponIconRTMat)
     surface.SetDrawColor(color_white)
-    surface.DrawTexturedRect(scrw - 550 * scale,scrh - 215 * scale,360 * scale, 180 * scale)
-    if GetConVar("developer"):GetBool() then surface.DrawOutlinedRect(scrw - 550 * scale,scrh - 170 * scale,360 * scale, 110 * scale) end
+    surface.DrawTexturedRect(scrw - 550 * scale,scrh - 190 * scale,360 * scale, 180 * scale)
+    if GetConVar("developer"):GetBool() then
+        surface.SetDrawColor(color_white)
+        surface.DrawOutlinedRect(scrw - 550 * scale,scrh - 190 * scale,360 * scale, 180 * scale)
+        surface.SetDrawColor(0,255,0,255)
+        surface.DrawOutlinedRect(scrw - 550 * scale,scrh - 160 * scale,360 * scale, 120 * scale)
+    end
 end
 
 hook.Add("HUDShouldDraw", "MWIIHideCHud", function(name)
