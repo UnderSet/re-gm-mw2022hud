@@ -54,6 +54,10 @@ MWIIHUD.IconColorCorrectParam = {
 MWIIHUD.Assets = {}
 MWIIHUD.Assets.Reference = {{Material("mwii/reference/reference1.png", "noclamp smooth")}, {Material("mwii/reference/reference2.png", "noclamp smooth")}, {Material("mwii/reference/reference3.png", "noclamp smooth")}} -- dont blame me for le double
 
+MWIIHUD.Colors.Preset = {}
+MWIIHUD.Colors.Preset.OrangeRed = Color(190,80,42,255)
+MWIIHUD.Colors.Preset.Yellow = Color(237,201,16,255)
+
 function MWIIHUD.NeededStuff()
     -- runs on start and every time res is changed
     scrw, scrh = ScrW(), ScrH()
@@ -77,7 +81,7 @@ function MWIIHUD.NeededStuff()
 
     surface.CreateFont("hl2wepicon", {
         font = 'halflife2',
-        size = 160 * scale,
+        size = 160 * math.Round(scale), -- figure this shit out eventually
         weight = 240
     })
     surface.CreateFont( "MWIIAmmoText", {
@@ -85,13 +89,19 @@ function MWIIHUD.NeededStuff()
         size = 50 * scale,
         weight = 60,
         shadow = true,
-    } )
+    })
     surface.CreateFont( "MWIIAmmoSubText", {
         font = "Stratum2 BETA Medium", -- Use the font-name which is shown to you by your operating system Font Viewer.
         size = 25 * scale,
         weight = 60,
         shadow = true,
-    } )
+    })
+    surface.CreateFont( "MWIISubText", {
+        font = "Stratum2 BETA Medium", -- Use the font-name which is shown to you by your operating system Font Viewer.
+        size = 28 * scale,
+        weight = 60,
+        shadow = true,
+    })
 end
 
 MWIIHUD.NeededStuff()
@@ -171,8 +181,14 @@ function MWIIHUD.Ammo()
     surface.SetDrawColor(color_white)
     surface.DrawRect(scrw - 150 * scale, scrh - 125 * scale, 2 * scale, 49 * scale)
     if MWIIHUD.WepData.Mag1Max != -1 then
-        draw.DrawText(MWIIHUD.WepData.Mag1, "MWIIAmmoText", scrw - 160 * scale, scrh - 132 * scale, color_white, TEXT_ALIGN_RIGHT)
-        draw.DrawText(MWIIHUD.WepData.Ammo1, "MWIIAmmoSubText", scrw - 160 * scale, scrh - 91 * scale, color_white, TEXT_ALIGN_RIGHT)
+        draw.DrawText(MWIIHUD.WepData.Mag1, "MWIIAmmoText", scrw - 160 * scale, scrh - 132 * scale, (MWIIHUD.WepData.Mag1 < MWIIHUD.WepData.Mag1Max / 3) and MWIIHUD.Colors.Preset.OrangeRed or color_white, TEXT_ALIGN_RIGHT)
+        draw.DrawText(MWIIHUD.WepData.Ammo1, "MWIIAmmoSubText", scrw - 160 * scale, scrh - 91 * scale, MWIIHUD.WepData.Ammo1 == 0 and MWIIHUD.Colors.Preset.OrangeRed or color_white, TEXT_ALIGN_RIGHT)
+
+        if MWIIHUD.WepData.Mag1 == 0 and MWIIHUD.WepData.Ammo1 == 0 then
+            draw.DrawText("NO AMMO","MWIISubText",scrw * 0.5,scrh - 463 * scale,MWIIHUD.Colors.Preset.OrangeRed,TEXT_ALIGN_CENTER)
+        elseif MWIIHUD.WepData.Mag1 < MWIIHUD.WepData.Mag1Max / 3 and MWIIHUD.WepData.Ammo1 == 0 then
+            draw.DrawText("LOW AMMO","MWIISubText",scrw * 0.5,scrh - 463 * scale,MWIIHUD.Colors.Preset.Yellow,TEXT_ALIGN_CENTER)
+        end
     end
 
     MWIIHUD.DrawWeaponIconToRT(wep,0, 0,1024 * math.Round(scale),512 * math.Round(scale))
