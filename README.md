@@ -8,7 +8,9 @@ Attempt at recreating the Call of Duty: Modern Warfare II HUD in Garry's Mod wit
 |Health and armor display|Killfeed|Minimap|
 |Weapon display *(~~main display~~, firemode and altfire, ~~weapon icon~~)*|Objective elements|Objective notifications *(top-right)*|
 |Compass *(working, gradient BG)*|Calling cards|System info display things *("telemetry")*|
-| | |Player account ID display
+| | |Player account ID display|
+
+*Crossed out means done unless in 3rd column.*
 
 ## License
 Code is [*GNU General Public License*, v3](https://github.com/UnderSet/re-gm-mw2022hud/blob/main/LICENSE) due to (future) use of code from DyaMetR's [D-GL4 HUD (aka `holohud2`)](https://github.com/DyaMetR/holohud2).
