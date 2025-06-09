@@ -57,6 +57,7 @@ MWIIHUD.Assets.Reference = {{Material("mwii/reference/reference1.png", "noclamp 
 MWIIHUD.Colors.Preset = {}
 MWIIHUD.Colors.Preset.OrangeRed = Color(190,80,42,255)
 MWIIHUD.Colors.Preset.Yellow = Color(237,201,16,255)
+MWIIHUD.Colors.Preset.Gray = Color(154,163,154,255)
 
 function MWIIHUD.NeededStuff()
     -- runs on start and every time res is changed
@@ -178,11 +179,11 @@ end
 function MWIIHUD.Ammo()
     if !IsValid(wep) then return end
     draw.NoTexture()
-    surface.SetDrawColor(color_white)
+    surface.SetDrawColor(MWIIHUD.Colors.Preset.Gray)
     surface.DrawRect(scrw - 150 * scale, scrh - 125 * scale, 2 * scale, 49 * scale)
     if MWIIHUD.WepData.Mag1Max != -1 then
         draw.DrawText(MWIIHUD.WepData.Mag1, "MWIIAmmoText", scrw - 160 * scale, scrh - 132 * scale, (MWIIHUD.WepData.Mag1 < MWIIHUD.WepData.Mag1Max / 3) and MWIIHUD.Colors.Preset.OrangeRed or color_white, TEXT_ALIGN_RIGHT)
-        draw.DrawText(MWIIHUD.WepData.Ammo1, "MWIIAmmoSubText", scrw - 160 * scale, scrh - 91 * scale, MWIIHUD.WepData.Ammo1 == 0 and MWIIHUD.Colors.Preset.OrangeRed or color_white, TEXT_ALIGN_RIGHT)
+        draw.DrawText(MWIIHUD.WepData.Ammo1, "MWIIAmmoSubText", scrw - 160 * scale, scrh - 91 * scale, MWIIHUD.WepData.Ammo1 == 0 and MWIIHUD.Colors.Preset.OrangeRed or MWIIHUD.Colors.Preset.Gray, TEXT_ALIGN_RIGHT)
 
         if MWIIHUD.WepData.Mag1 == 0 and MWIIHUD.WepData.Ammo1 == 0 then
             draw.DrawText("NO AMMO","MWIISubText",scrw * 0.5,scrh - 463 * scale,MWIIHUD.Colors.Preset.OrangeRed,TEXT_ALIGN_CENTER)
