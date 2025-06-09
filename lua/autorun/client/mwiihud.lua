@@ -4,7 +4,7 @@ local MWIIHUD = {}
 local scrw, scrh = 0, 0
 local scale = 1
 
-MWIIHUD.DebugReference = CreateClientConVar("MWIIHUD_Debug_DrawReference", 0, false, false, "debug: draw reference image, gives no shit about main toggle", 0, 2)
+MWIIHUD.DebugReference = CreateClientConVar("MWIIHUD_Debug_DrawReference", 0, false, false, "debug: draw reference image, gives no shit about main toggle", 0, 3)
 MWIIHUD.Toggle = CreateClientConVar("MWIIHUD_Enable", 1, true, false, "Enables the HUD.", 0, 1)
 
 
@@ -48,7 +48,7 @@ MWIIHUD.IconColorCorrectParam = {
 }
 
 MWIIHUD.Assets = {}
-MWIIHUD.Assets.Reference = {{Material("mwii/reference/reference1.png", "noclamp smooth")}, {Material("mwii/reference/reference2.png", "noclamp smooth")}} -- dont blame me for le double
+MWIIHUD.Assets.Reference = {{Material("mwii/reference/reference1.png", "noclamp smooth")}, {Material("mwii/reference/reference2.png", "noclamp smooth")}, {Material("mwii/reference/reference3.png", "noclamp smooth")}} -- dont blame me for le double
 
 function MWIIHUD.NeededStuff()
     -- runs on start and every time res is changed
