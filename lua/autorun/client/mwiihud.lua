@@ -136,15 +136,15 @@ end
 function MWIIHUD.MainHook()
     ply = LocalPlayer()
 
-    if MWIIHUD.Toggle:GetBool() and GetConVar("cl_drawhud"):GetBool() then
-        local dev = GetConVar("developer"):GetBool()
-        if dev and MWIIHUD.DebugReference:GetBool() then
-            surface.SetMaterial(MWIIHUD.Assets.Reference[MWIIHUD.DebugReference:GetInt()][1])
-            surface.SetDrawColor(255,255,255,180)
-            surface.DrawTexturedRect(0,0,scrw,scrh)
-            surface.DrawRect(100,100,100,100)
-        end
+    local dev = GetConVar("developer"):GetBool()
+    if dev and MWIIHUD.DebugReference:GetBool() then
+        surface.SetMaterial(MWIIHUD.Assets.Reference[MWIIHUD.DebugReference:GetInt()][1])
+        surface.SetDrawColor(255,255,255,180)
+        surface.DrawTexturedRect(0,0,scrw,scrh)
+        surface.DrawRect(100,100,100,100)
+    end
 
+    if MWIIHUD.Toggle:GetBool() and GetConVar("cl_drawhud"):GetBool() then
         MWIIHUD.WeaponData()
         --MWIIHUD.Vitals()
         --MWIIHUD.Compass()
