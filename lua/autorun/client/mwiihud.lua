@@ -1,8 +1,12 @@
 --include("TFAKeys.lua") -- include() fuck you why wont you work
 
 local MWIIHUD = {}
+MWIIHUD.WepData = {}
+MWIIHUD.Colors = {} -- trust me when I say we fill these later
 local scrw, scrh = 0, 0
 local scale = 1
+local ply
+local wep
 
 MWIIHUD.DebugReference = CreateClientConVar("MWIIHUD_Debug_DrawReference", 0, false, false, "debug: draw reference image, gives no shit about main toggle", 0, 3)
 MWIIHUD.DebugOffsets = CreateClientConVar("MWIIHUD_Debug_PrintOffsets", 0, false, false, "debug: print all weapon icon offsets", 0, 1)
@@ -130,6 +134,8 @@ function MWIIHUD.DrawWeaponIconToRT(Weapon, x, y, width, h)
 end
 
 function MWIIHUD.MainHook()
+    ply = LocalPlayer()
+
     if MWIIHUD.Toggle:GetBool() and GetConVar("cl_drawhud"):GetBool() then
         local dev = GetConVar("developer"):GetBool()
         if dev and MWIIHUD.DebugReference:GetBool() then
@@ -139,21 +145,37 @@ function MWIIHUD.MainHook()
             surface.DrawRect(100,100,100,100)
         end
 
-        --MWIIHUD.WeaponData()
+        MWIIHUD.WeaponData()
         --MWIIHUD.Vitals()
         --MWIIHUD.Compass()
         MWIIHUD.Ammo()
     end
 end
 
+function MWIIHUD.WeaponData()
+    wep = ply:GetActiveWeapon()
+
+    if !IsValid(wep) then return end
+
+    MWIIHUD.WepData.Mag1 = wep:Clip1()
+    MWIIHUD.WepData.Mag1Max = wep:GetMaxClip1()
+    MWIIHUD.WepData.Mag2 = wep:Clip2()
+    MWIIHUD.WepData.Mag2Max = wep:GetMaxClip2()
+    MWIIHUD.WepData.Ammo1 = ply:GetAmmoCount(wep:GetPrimaryAmmoType())
+    MWIIHUD.WepData.Ammo2 = ply:GetAmmoCount(wep:GetSecondaryAmmoType())
+end
+
 function MWIIHUD.Ammo()
+    if !IsValid(wep) then return end
     draw.NoTexture()
     surface.SetDrawColor(color_white)
     surface.DrawRect(scrw - 150 * scale, scrh - 125 * scale, 2 * scale, 49 * scale)
-    draw.DrawText(LocalPlayer():GetActiveWeapon():Clip1(), "MWIIAmmoText", scrw - 160 * scale, scrh - 132 * scale, color_white, TEXT_ALIGN_RIGHT)
-    draw.DrawText(LocalPlayer():GetAmmoCount(LocalPlayer():GetActiveWeapon():GetPrimaryAmmoType()), "MWIIAmmoSubText", scrw - 160 * scale, scrh - 91 * scale, color_white, TEXT_ALIGN_RIGHT)
+    if MWIIHUD.WepData.Mag1Max != -1 then
+        draw.DrawText(MWIIHUD.WepData.Mag1, "MWIIAmmoText", scrw - 160 * scale, scrh - 132 * scale, color_white, TEXT_ALIGN_RIGHT)
+        draw.DrawText(MWIIHUD.WepData.Ammo1, "MWIIAmmoSubText", scrw - 160 * scale, scrh - 91 * scale, color_white, TEXT_ALIGN_RIGHT)
+    end
 
-    MWIIHUD.DrawWeaponIconToRT(LocalPlayer():GetActiveWeapon(),0, 0,1024 * math.Round(scale),512 * math.Round(scale))
+    MWIIHUD.DrawWeaponIconToRT(wep,0, 0,1024 * math.Round(scale),512 * math.Round(scale))
     surface.SetMaterial(MWIIHUD.WeaponIconRTMat)
     surface.SetDrawColor(color_white)
     surface.DrawTexturedRect(scrw - 550 * scale,scrh - 190 * scale,360 * scale, 180 * scale)
