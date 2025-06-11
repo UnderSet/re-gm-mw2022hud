@@ -1,4 +1,4 @@
---include("TFAKeys.lua") -- include() fuck you why wont you work
+--include("TFAKeys.lua") -- include() is my final boss
 
 local MWIIHUD = {}
 MWIIHUD.WepData = {}
@@ -52,7 +52,7 @@ MWIIHUD.IconColorCorrectParam = {
 }
 
 MWIIHUD.Assets = {}
-MWIIHUD.Assets.Reference = {{Material("mwii/reference/reference1.png", "noclamp smooth")}, {Material("mwii/reference/reference2.png", "noclamp smooth")}, {Material("mwii/reference/reference3.png", "noclamp smooth")}} -- dont blame me for le double
+MWIIHUD.Assets.Reference = {{Material("mwii/reference/reference1.png", "noclamp smooth")}, {Material("mwii/reference/reference2.png", "noclamp smooth")}, {Material("mwii/reference/reference3.png", "noclamp smooth")}, {Material("mwii/reference/reference4.png", "noclamp smooth")}} -- there *has* to be a better fucking way
 
 MWIIHUD.Colors.Preset = {}
 MWIIHUD.Colors.Preset.OrangeRed = Color(190,80,42,255)
