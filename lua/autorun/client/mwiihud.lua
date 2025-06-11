@@ -11,6 +11,7 @@ local wep
 MWIIHUD.DebugReference = CreateClientConVar("MWIIHUD_Debug_DrawReference", 0, false, false, "debug: draw reference image, gives no shit about main toggle", 0, 4)
 MWIIHUD.DebugOffsets = CreateClientConVar("MWIIHUD_Debug_PrintOffsets", 0, false, false, "debug: print all weapon icon offsets", 0, 1)
 MWIIHUD.Toggle = CreateClientConVar("MWIIHUD_Enable", 1, true, false, "Enables the HUD.", 0, 1)
+MWIIHUD.ToggleCaptions = CreateClientConVar("MWIIHUD_EnableCaptions", 0, true, false, "Enables the custom captions implementation this HUD has.")
 
 MWIIHUD.HideCElements = {
     ["CHudHealth"] = true,
@@ -58,6 +59,8 @@ MWIIHUD.Colors.Preset = {}
 MWIIHUD.Colors.Preset.OrangeRed = Color(190,80,42,255)
 MWIIHUD.Colors.Preset.Yellow = Color(237,201,16,255)
 MWIIHUD.Colors.Preset.Gray = Color(154,163,154,255)
+
+MWIIHUD.CaptionCache = {} -- trust me this is a good idea (watch future me regret this lmao)
 
 function MWIIHUD.NeededStuff()
     -- runs on start and every time res is changed
@@ -144,6 +147,29 @@ function MWIIHUD.DrawWeaponIconToRT(Weapon, x, y, width, h)
     render.PopRenderTarget()
 end
 
+function MWIIHUD.ParseCaption(soundscript, duration, fromplayer, text)
+    -- beware: might induce sleep loss and insanity
+    local outtable = {}
+    if (text != nil and !string.match(text, "*pain!%*")) and MWIIHUD.ToggleCaptions:GetBool() then
+        actualtext = string.Explode("<", text, false)
+        PrintTable(actualtext)
+        for i=1,#actualtext do
+            if string.StartsWith(actualtext[i], "clr:") then
+                local color = string.Explode(">",string.Replace(actualtext[i], "clr:", ""))[1]
+                outtext = string.Replace(actualtext[i], "clr:"..color..">", "")
+                color = string.Explode(",", color, false)
+                PrintTable(color)
+                color = Color(color[1], color[2], color[3], 255) -- this is stupid
+                outtable = {outtext, color}
+            elseif string.StartsWith(actualtext[i], "sfx>") then return
+                else outtable = {actualtext[i], color_white}
+            end
+        end
+
+        MWIIHUD.CaptionCache[#MWIIHUD.CaptionCache + 1] = {outtable, CurTime() + duration}
+    end
+end
+
 function MWIIHUD.MainHook()
     ply = LocalPlayer()
 
@@ -160,6 +186,8 @@ function MWIIHUD.MainHook()
         --MWIIHUD.Vitals()
         --MWIIHUD.Compass()
         MWIIHUD.Ammo()
+
+        MWIIHUD.Captions()
     end
 end
 
@@ -204,8 +232,21 @@ function MWIIHUD.Ammo()
     end
 end
 
+function MWIIHUD.Captions()
+    if MWIIHUD.ToggleCaptions:GetBool() then
+        surface.SetFont("MWIISubText")
+        local h = select(2, surface.GetTextSize("TESTING"))
+        PrintTable(MWIIHUD.CaptionCache)
+        for i=1,#MWIIHUD.CaptionCache do
+            draw.DrawText(MWIIHUD.CaptionCache[i][1][1], "MWIISubText", scrw * 0.5, scrh * 0.7 + h * (i - 1), MWIIHUD.CaptionCache[i][1][2] or color_white, TEXT_ALIGN_CENTER)
+        end
+    end
+end
+
+hook.Add("OnCloseCaptionEmit", "MWIIGrabCaption", MWIIHUD.ParseCaption)
 hook.Add("HUDShouldDraw", "MWIIHideCHud", function(name)
-    if MWIIHUD.Toggle:GetBool() and MWIIHUD.HideCElements[name] and GetConVar("cl_drawhud"):GetBool() then return false end
+    if MWIIHUD.Toggle:GetBool() and MWIIHUD.ToggleCaptions:GetBool() and GetConVar("cl_drawhud"):GetBool() and name == "CHudCloseCaption" then return false
+    elseif MWIIHUD.Toggle:GetBool() and MWIIHUD.HideCElements[name] and GetConVar("cl_drawhud"):GetBool() then return false end
 end)
 hook.Add("HUDPaint", "MWIIHUDDraw", MWIIHUD.MainHook)
 hook.Add("OnScreenSizeChanged", "MWIIHUDResChange", MWIIHUD.NeededStuff)
