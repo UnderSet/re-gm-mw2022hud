@@ -178,8 +178,6 @@ function MWIIHUD.ParseCaption(soundscript, duration, fromplayer, text)
                 end
             end
         end
-        
-        PrintTable(outtable)
 
         for i = #outtable, 1, -1 do
             if outtable[i][1] == "" or !outtable[i][1] then
@@ -261,7 +259,27 @@ function MWIIHUD.Captions()
         local linecount = 0
         for i=1,#MWIIHUD.CaptionCache do
             if #MWIIHUD.CaptionCache[i][1] == 1 then
-                draw.DrawText(MWIIHUD.CaptionCache[i][1][1][1], "MWIISubText", scrw * 0.5, scrh * 0.7 + h * (i - 1), MWIIHUD.CaptionCache[i][1][1][2] or color_white, TEXT_ALIGN_CENTER)
+                local drawtxt = ""
+                local drawtbl = {}
+                local texttbl = string.Explode(" ", MWIIHUD.CaptionCache[i][1][1][1], false)
+
+                for f=1,#texttbl do
+                    if surface.GetTextSize(drawtxt .. " " .. texttbl[f]) < scrw * 0.6 then
+                        drawtxt = drawtxt .. " " .. texttbl[f]
+                        if f == #texttbl then
+                            drawtbl[#drawtbl + 1] = drawtxt
+                        end
+                    else
+                        drawtbl[#drawtbl + 1] = drawtxt
+                        drawtxt = texttbl[f]
+                    end
+                end
+
+                drawtxt = ""
+                for f=1,#drawtbl do
+                    drawtxt = drawtxt .. drawtbl[f] .. "\n"
+                end
+                draw.DrawText(drawtxt, "MWIISubText", scrw * 0.5, scrh * 0.7 + h * (i - 1), MWIIHUD.CaptionCache[i][1][1][2] or color_white, TEXT_ALIGN_CENTER)
                 linecount = linecount + 1
             else
                 local drawtbl = {}
