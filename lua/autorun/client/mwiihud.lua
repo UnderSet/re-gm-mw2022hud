@@ -279,8 +279,9 @@ function MWIIHUD.Captions()
                 for f=1,#drawtbl do
                     drawtxt = drawtxt .. drawtbl[f] .. "\n"
                 end
-                draw.DrawText(drawtxt, "MWIISubText", scrw * 0.5, scrh * 0.7 + h * (i - 1), MWIIHUD.CaptionCache[i][1][1][2] or color_white, TEXT_ALIGN_CENTER)
-                linecount = linecount + 1
+
+                draw.DrawText(drawtxt, "MWIISubText", scrw * 0.5, scrh * 0.7 + h * linecount, MWIIHUD.CaptionCache[i][1][1][2] or color_white, TEXT_ALIGN_CENTER)
+                linecount = linecount + #drawtbl
             else
                 local drawtbl = {}
                 drawtbl[1] = {} -- thanks lua
