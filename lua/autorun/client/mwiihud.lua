@@ -62,7 +62,14 @@ MWIIHUD.Colors.Preset.OrangeRed = Color(190,80,42,255)
 MWIIHUD.Colors.Preset.Yellow = Color(237,201,16,255)
 MWIIHUD.Colors.Preset.Gray = Color(154,163,154,255)
 
+MWIIHUD.Colors.WeaponName = Color(255,255,255,255)
+MWIIHUD.Colors.AmmoName = Color(144,144,144)
+
 MWIIHUD.CaptionCache = {} -- trust me this is a good idea (watch future me regret this lmao)
+
+MWIIHUD.Times = {} -- stores time variables ok
+MWIIHUD.Times.WepChangeTimeOut = 0
+MWIIHUD.Times.AmmoTypeFade = 0
 
 function MWIIHUD.NeededStuff()
     -- runs on start and every time res is changed
@@ -218,6 +225,7 @@ function MWIIHUD.MainHook()
 end
 
 function MWIIHUD.WeaponData()
+    lastframewep = wep
     wep = ply:GetActiveWeapon()
 
     if !IsValid(wep) then return end
@@ -228,6 +236,8 @@ function MWIIHUD.WeaponData()
     MWIIHUD.WepData.Mag2Max = wep:GetMaxClip2()
     MWIIHUD.WepData.Ammo1 = ply:GetAmmoCount(wep:GetPrimaryAmmoType())
     MWIIHUD.WepData.Ammo2 = ply:GetAmmoCount(wep:GetSecondaryAmmoType())
+
+    lastframeammotype = wep:GetPrimaryAmmoType()-- hardcoded for now, alt ammo handling not available *yet*
 end
 
 function MWIIHUD.Vitals()
@@ -291,13 +301,25 @@ function MWIIHUD.Ammo()
     MWIIHUD.DrawWeaponIconToRT(wep,0, 0,1024 * math.Round(scale),512 * math.Round(scale))
     surface.SetMaterial(MWIIHUD.WeaponIconRTMat)
     surface.SetDrawColor(color_white)
-    surface.DrawTexturedRect(scrw - 550 * scale,scrh - 190 * scale,360 * scale, 180 * scale)
+    surface.DrawTexturedRect(scrw - 540 * scale,scrh - 180 * scale,320 * scale, 160 * scale)
     if GetConVar("developer"):GetBool() then
         surface.SetDrawColor(color_white)
-        surface.DrawOutlinedRect(scrw - 550 * scale,scrh - 190 * scale,360 * scale, 180 * scale)
+        surface.DrawOutlinedRect(scrw - 540 * scale,scrh - 180 * scale,320 * scale, 160 * scale)
         surface.SetDrawColor(0,255,0,255)
-        surface.DrawOutlinedRect(scrw - 550 * scale,scrh - 160 * scale,360 * scale, 120 * scale)
+        surface.DrawOutlinedRect(scrw - 540 * scale,scrh - 150 * scale,320 * scale, 100 * scale)
     end
+
+    if lastframewep != wep then
+        MWIIHUD.Times.WepChangeTimeOut = CurTime() + 2 
+        MWIIHUD.Times.AmmoTypeFade = CurTime() + 2
+    elseif lastframeammotype != wep:GetPrimaryAmmoType() then MWIIHUD.Times.AmmoTypeFade = CurTime() + 2 end
+
+    MWIIHUD.Colors.AmmoName.a = 255 * (math.min(MWIIHUD.Times.AmmoTypeFade - CurTime(), 0) + 1)
+    draw.DrawText(MWIIHUD.WepData.Mag1Max != -1 and game.GetAmmoName(wep:GetPrimaryAmmoType()) or "Melee/Tool",
+        "MWIIAmmoSubText", scrw - 400 * scale, scrh - 177 * scale, MWIIHUD.Colors.AmmoName)
+
+    MWIIHUD.Colors.WeaponName.a = 255 * (math.min(MWIIHUD.Times.WepChangeTimeOut - CurTime(), 0) + 1)
+    draw.DrawText(wep:GetPrintName(), "MWIIAmmoSubText", scrw - 400 * scale, scrh - 200 * scale, MWIIHUD.Colors.WeaponName)
 end
 
 function MWIIHUD.Captions()
