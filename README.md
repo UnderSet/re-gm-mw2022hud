@@ -5,7 +5,7 @@ Attempt at recreating the Call of Duty: Modern Warfare II HUD in Garry's Mod wit
 
 |Will do|Probably?|Just...*no* (never)|
 |---|---|---|
-|Health and armor display|Killfeed|Minimap|
+|~~Health and armor display~~|Killfeed|Minimap|
 |Weapon display *(~~main display~~, firemode and altfire, ~~weapon icon~~)*|Objective elements|Objective notifications *(top-right)*|
 |Compass *(working, gradient BG)*|Calling cards|System info display things *("telemetry")*|
 |Subtitles *(~~parsing text (basic)~~, ~~drawing~~, ~~multi-tag handling~~)* [^1]| |Player account ID display|
