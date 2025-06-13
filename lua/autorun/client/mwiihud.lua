@@ -55,6 +55,7 @@ MWIIHUD.IconColorCorrectParam = {
 
 MWIIHUD.Assets = {}
 MWIIHUD.Assets.Reference = {{Material("mwii/reference/reference1.png", "noclamp smooth")}, {Material("mwii/reference/reference2.png", "noclamp smooth")}, {Material("mwii/reference/reference3.png", "noclamp smooth")}, {Material("mwii/reference/reference4.png", "noclamp smooth")}} -- there *has* to be a better fucking way
+MWIIHUD.Assets.ArmorPlate = Material("mwii/assets/armorplate.png", "noclamp smooth")
 
 MWIIHUD.Colors.Preset = {}
 MWIIHUD.Colors.Preset.OrangeRed = Color(190,80,42,255)
@@ -104,6 +105,12 @@ function MWIIHUD.NeededStuff()
     surface.CreateFont( "MWIISubText", {
         font = "Stratum2 BETA Medium", -- Use the font-name which is shown to you by your operating system Font Viewer.
         size = 28 * scale,
+        weight = 60,
+        shadow = true,
+    })
+    surface.CreateFont( "MWIINickText", {
+        font = "Roboto", -- Use the font-name which is shown to you by your operating system Font Viewer.
+        size = 20 * scale,
         weight = 60,
         shadow = true,
     })
@@ -202,7 +209,7 @@ function MWIIHUD.MainHook()
 
     if MWIIHUD.Toggle:GetBool() and GetConVar("cl_drawhud"):GetBool() then
         MWIIHUD.WeaponData()
-        --MWIIHUD.Vitals()
+        MWIIHUD.Vitals()
         --MWIIHUD.Compass()
         MWIIHUD.Ammo()
 
@@ -221,6 +228,40 @@ function MWIIHUD.WeaponData()
     MWIIHUD.WepData.Mag2Max = wep:GetMaxClip2()
     MWIIHUD.WepData.Ammo1 = ply:GetAmmoCount(wep:GetPrimaryAmmoType())
     MWIIHUD.WepData.Ammo2 = ply:GetAmmoCount(wep:GetSecondaryAmmoType())
+end
+
+function MWIIHUD.Vitals()
+    if ply:Alive() then
+        surface.SetDrawColor(59,59,59,128)
+        surface.DrawRect(63 * scale, scrh - 57 * scale, 172 * scale, 7 * scale)
+        surface.SetDrawColor(255,255,255,255)
+        surface.DrawRect(65 * scale, scrh - 55 * scale, 168 * scale * (ply:Health() / 100), 3 * scale)
+
+        surface.SetDrawColor(255,255,255,96)
+        --surface.DrawRect(63 * scale, scrh - 63 * scale, 171 * scale, 3 * scale)
+        --surface.SetDrawColor(255,0,0,96)
+        --surface.DrawRect(63 * scale, scrh - 65 * scale, 56 * scale, 5 * scale)
+        --surface.DrawRect(121 * scale, scrh - 65 * scale, 56 * scale, 5 * scale)
+        --surface.DrawRect(179 * scale, scrh - 65 * scale, 56 * scale, 5 * scale)
+
+        surface.SetDrawColor(59,59,59,128)
+        surface.DrawRect(63 * scale, scrh - 66 * scale, 56 * scale, 7 * scale)
+        surface.DrawRect(121 * scale, scrh - 66 * scale, 56 * scale, 7 * scale)
+        surface.DrawRect(179 * scale, scrh - 66 * scale, 56 * scale, 7 * scale)
+        surface.SetDrawColor(131,161,226)
+        surface.DrawRect(65 * scale, scrh - 64 * scale, 52 * scale * math.Clamp(ply:Armor() / 100 / (1 / 3), 0, 1), 3 * scale)
+        surface.DrawRect(123 * scale, scrh - 64 * scale, 52 * scale * math.Clamp(ply:Armor() / 100 / (1 / 3) - 1, 0, 1), 3 * scale)
+        surface.DrawRect(181 * scale, scrh - 64 * scale, 52 * scale * math.Clamp(ply:Armor() / 100 / (1 / 3) - 2, 0, 1), 3 * scale)
+
+        draw.DrawText(ply:Nick(), "MWIINickText", 66 * scale, scrh - 90 * scale, Color(131,161,226))
+
+        if GetConVar("sv_armorplates_spawnamount") then
+            surface.SetMaterial(MWIIHUD.Assets.ArmorPlate)
+            surface.SetDrawColor(255,255,255,255)
+            surface.DrawTexturedRect(264 * scale,scrh - 80 * scale,36 * scale,36 * scale)
+            draw.DrawText(ply:GetArmorPlates() or GetConVar("sv_armorplates_spawnamount"):GetInt(), "MWIISubText", 310 * scale, scrh - 72 * scale, color_white)
+        end
+    end
 end
 
 function MWIIHUD.Ammo()
@@ -251,7 +292,6 @@ function MWIIHUD.Ammo()
     end
 end
 
-
 function MWIIHUD.Captions()
     surface.SetFont("MWIISubText")
     local h = select(2, surface.GetTextSize("TESTING"))
@@ -264,7 +304,7 @@ function MWIIHUD.Captions()
                 local texttbl = string.Explode(" ", MWIIHUD.CaptionCache[i][1][1][1], false)
 
                 for f=1,#texttbl do
-                    if surface.GetTextSize(drawtxt .. " " .. texttbl[f]) < scrw * 0.6 then
+                    if surface.GetTextSize(drawtxt .. " " .. texttbl[f]) < scrw * 0.55 then
                         drawtxt = drawtxt .. " " .. texttbl[f]
                         if f == #texttbl then
                             drawtbl[#drawtbl + 1] = drawtxt
@@ -280,7 +320,7 @@ function MWIIHUD.Captions()
                     drawtxt = drawtxt .. drawtbl[f] .. "\n"
                 end
 
-                draw.DrawText(drawtxt, "MWIISubText", scrw * 0.5, scrh * 0.7 + h * linecount, MWIIHUD.CaptionCache[i][1][1][2] or color_white, TEXT_ALIGN_CENTER)
+                draw.DrawText(drawtxt, "MWIISubText", scrw * 0.5, scrh * 0.76 + h * linecount, MWIIHUD.CaptionCache[i][1][1][2] or color_white, TEXT_ALIGN_CENTER)
                 linecount = linecount + #drawtbl
             else
                 local drawtbl = {}
@@ -293,7 +333,7 @@ function MWIIHUD.Captions()
 
                     -- surface.GetTextSize() isn't cooperating with select() here so wasted memory :sadge:
                     for f=1,#texttbl do
-                        if surface.GetTextSize(teststring .. " " .. texttbl[f]) < scrw * 0.6 then
+                        if surface.GetTextSize(teststring .. " " .. texttbl[f]) < scrw * 0.55 then
                             teststring = teststring .. " " .. texttbl[f]
                             if f == #texttbl then
                                 drawtbl[drawtbli][#drawtbl[drawtbli] + 1] = {teststring, MWIIHUD.CaptionCache[i][1][e][2], surface.GetTextSize(teststring)}    
@@ -312,7 +352,7 @@ function MWIIHUD.Captions()
                     for e=1,#drawtbl[i] do
                         linelen = linelen + drawtbl[i][e][3]
                     end
-                    surface.SetTextPos(scrw * 0.5 - linelen * 0.5, scrh * 0.7 + h * linecount)
+                    surface.SetTextPos(scrw * 0.5 - linelen * 0.5, scrh * 0.76 + h * linecount)
                     for e=1,#drawtbl[i] do
                         surface.SetTextColor(drawtbl[i][e][2].r,drawtbl[i][e][2].g,drawtbl[i][e][2].b,255)
                         surface.DrawText(drawtbl[i][e][1])
