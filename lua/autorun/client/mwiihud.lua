@@ -278,10 +278,11 @@ function MWIIHUD.Ammo()
         elseif MWIIHUD.WepData.Mag1 < MWIIHUD.WepData.Mag1Max / 3 and MWIIHUD.WepData.Ammo1 == 0 then
             draw.DrawText("LOW AMMO","MWIISubText",scrw * 0.5,scrh - 463 * scale,MWIIHUD.Colors.Preset.Yellow,TEXT_ALIGN_CENTER)
         elseif MWIIHUD.WepData.Mag1 < MWIIHUD.WepData.Mag1Max / 3 then
+            surface.SetFont("MWIISubText")
             local w2, h = surface.GetTextSize(string.upper(input.LookupBinding("+reload")))
             local w = w2 + select(1, surface.GetTextSize("RELOAD")) + 16 * scale
             surface.SetDrawColor(255,255,255,255)
-            draw.RoundedBox(6, scrw * 0.5 - w * 0.5 - 6 * scale, scrh - 463 * scale, w2 + 12 * scale, h, color_white)
+            draw.RoundedBox(6, scrw * 0.5 - w * 0.5 - 6 * scale, scrh - 465 * scale, w2 + 12 * scale, h + 2 * scale, color_white)
             draw.DrawText(string.upper(input.LookupBinding("+reload")), "MWIISubText", scrw * 0.5 - w * 0.5, scrh - 463 * scale, color_black)
             draw.DrawText("RELOAD", "MWIISubText", scrw * 0.5 - w * 0.5 + w2 + 16 * scale, scrh - 463 * scale, color_white)
         end
