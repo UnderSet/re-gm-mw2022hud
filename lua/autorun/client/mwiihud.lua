@@ -180,7 +180,9 @@ function MWIIHUD.ParseCaption(soundscript, duration, fromplayer, text)
             actualtext = string.Explode("<", text, false)
             --PrintTable(actualtext)
             for i=1,#actualtext do
-                if string.StartsWith(actualtext[i], "clr:") then
+                if string.StartsWith(actualtext[i], "cr>") then
+                    outtable[i] = {"<"..actualtext[i], color} -- handle carriage returns in rendering code
+                elseif string.StartsWith(actualtext[i], "clr:") then
                     local colorstr = string.Explode(">",string.Replace(actualtext[i], "clr:", ""))[1]
                     local outtext = string.Replace(actualtext[i], "clr:"..colorstr..">", "")
                     color = string.Explode(",", colorstr, false)
@@ -336,7 +338,10 @@ function MWIIHUD.Captions()
                 local texttbl = string.Explode(" ", MWIIHUD.CaptionCache[i][1][1][1], false)
 
                 for f=1,#texttbl do
-                    if surface.GetTextSize(drawtxt .. " " .. texttbl[f]) < scrw * 0.55 then
+                    if string.StartsWith(texttbl[f], "<cr>") then
+                        drawtbl[#drawtbl + 1] = drawtxt
+                        drawtxt = string.Right(texttbl[f], 3)
+                    elseif surface.GetTextSize(drawtxt .. " " .. texttbl[f]) < scrw * 0.55 then
                         drawtxt = drawtxt .. " " .. texttbl[f]
                         if f == #texttbl then
                             drawtbl[#drawtbl + 1] = drawtxt
@@ -365,7 +370,12 @@ function MWIIHUD.Captions()
 
                     -- surface.GetTextSize() isn't cooperating with select() here so wasted memory :sadge:
                     for f=1,#texttbl do
-                        if surface.GetTextSize(teststring .. " " .. texttbl[f]) < scrw * 0.55 then
+                        if string.StartsWith(texttbl[f], "<cr>") then -- force a line break
+                            drawtbl[drawtbli][#drawtbl[drawtbli] + 1] = {teststring, MWIIHUD.CaptionCache[i][1][e][2], surface.GetTextSize(teststring)}
+                            teststring = string.Right(texttbl[f], string.len(texttbl[f]) - 4)
+                            drawtbl[#drawtbl + 1] = {}
+                            drawtbli = #drawtbl
+                        elseif surface.GetTextSize(teststring .. " " .. texttbl[f]) < scrw * 0.55 then
                             teststring = teststring .. " " .. texttbl[f]
                             if f == #texttbl then
                                 drawtbl[drawtbli][#drawtbl[drawtbli] + 1] = {teststring, MWIIHUD.CaptionCache[i][1][e][2], surface.GetTextSize(teststring)}    
