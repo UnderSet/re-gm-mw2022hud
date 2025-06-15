@@ -13,13 +13,15 @@ MWIIHUD.DebugOffsets = CreateClientConVar("MWIIHUD_Debug_PrintOffsets", 0, false
 MWIIHUD.DebugCaptionParsing = CreateClientConVar("MWIIHUD_Debug_CaptionDebugText", 0, false, false, "debug: use debug string for captions instead of actual caption content", 0, 1)
 MWIIHUD.Toggle = CreateClientConVar("MWIIHUD_Enable", 1, true, false, "Enables the HUD.", 0, 1)
 MWIIHUD.ToggleCaptions = CreateClientConVar("MWIIHUD_EnableCaptions", 0, true, false, "Enables the custom captions implementation this HUD has.")
+MWIIHUD.CaptionsShowSFX = CreateClientConVar("MWIIHUD_EnableCaptionsSFX", 0, true, false, "Show SFX on captions. Looks really ugly, keep this off most of the time please.")
 
 MWIIHUD.HideCElements = {
     ["CHudHealth"] = true,
     ["CHudBattery"] = true,
     ["CHudSuitPower"] = true,
     ["CHudAmmo"] = true,
-    ["CHudSecondaryAmmo"] = true
+    ["CHudSecondaryAmmo"] = true,
+    ["CHudCloseCaption"] = true
 }
 
 MWIIHUD.HL2WeaponIconChara = { -- Stock HL2 gun icons use a FONT.
@@ -168,7 +170,7 @@ function MWIIHUD.ParseCaption(soundscript, duration, fromplayer, text)
     local counter = 0
     local color = color_white
     
-    if (text != nil and !string.match(text, "*pain!%*")) and MWIIHUD.ToggleCaptions:GetBool() then
+    if text != nil and MWIIHUD.ToggleCaptions:GetBool() then
         local debugtext = "<clr:128,255,127>HELLO THERE<clr:126,217,255>COLOR SWITCH<clr:255,255,255>really stupid long line why am I trying to fabricate a stupid long line what the hell is wrong with me why do I need such a long line, why do I still need a much longer line what is wrong with glua today"
         if GetConVar("developer"):GetBool() and MWIIHUD.DebugCaptionParsing:GetBool() then text = debugtext end
 
@@ -185,7 +187,7 @@ function MWIIHUD.ParseCaption(soundscript, duration, fromplayer, text)
                     color = Color(color[1], color[2], color[3], 255) -- this is stupid
 
                     outtable[i] = {outtext, color}
-                elseif string.StartsWith(actualtext[i], "sfx>") then return
+                elseif string.StartsWith(actualtext[i], "sfx>") and !MWIIHUD.CaptionsShowSFX:GetBool() then return
                 else
                     local outtext = string.Explode(">", actualtext[i], false)[2]
                     outtable[i] = {outtext, color}
@@ -310,15 +312,15 @@ function MWIIHUD.Ammo()
     end
 
     if lastframewep != wep then
-        MWIIHUD.Times.WepChangeTimeOut = CurTime() + 2 
-        MWIIHUD.Times.AmmoTypeFade = CurTime() + 2
-    elseif lastframeammotype != wep:GetPrimaryAmmoType() then MWIIHUD.Times.AmmoTypeFade = CurTime() + 2 end
+        MWIIHUD.Times.WepChangeTimeOut = CurTime() + 1.6
+        MWIIHUD.Times.AmmoTypeFade = CurTime() + 1.6
+    elseif lastframeammotype != wep:GetPrimaryAmmoType() then MWIIHUD.Times.AmmoTypeFade = CurTime() + 1.6 end
 
-    MWIIHUD.Colors.AmmoName.a = 255 * (math.min(MWIIHUD.Times.AmmoTypeFade - CurTime(), 0) + 1)
+    MWIIHUD.Colors.AmmoName.a = 255 * (math.min(MWIIHUD.Times.AmmoTypeFade - CurTime(), 0) * 4 + 1)
     draw.DrawText(MWIIHUD.WepData.Mag1Max != -1 and game.GetAmmoName(wep:GetPrimaryAmmoType()) or "Melee/Tool",
         "MWIIAmmoSubText", scrw - 400 * scale, scrh - 177 * scale, MWIIHUD.Colors.AmmoName)
 
-    MWIIHUD.Colors.WeaponName.a = 255 * (math.min(MWIIHUD.Times.WepChangeTimeOut - CurTime(), 0) + 1)
+    MWIIHUD.Colors.WeaponName.a = 255 * (math.min(MWIIHUD.Times.WepChangeTimeOut - CurTime(), 0) * 4 + 1)
     draw.DrawText(wep:GetPrintName(), "MWIIAmmoSubText", scrw - 400 * scale, scrh - 200 * scale, MWIIHUD.Colors.WeaponName)
 end
 
@@ -401,8 +403,7 @@ end
 
 hook.Add("OnCloseCaptionEmit", "MWIIGrabCaption", MWIIHUD.ParseCaption)
 hook.Add("HUDShouldDraw", "MWIIHideCHud", function(name)
-    if MWIIHUD.Toggle:GetBool() and MWIIHUD.ToggleCaptions:GetBool() and GetConVar("cl_drawhud"):GetBool() and name == "CHudCloseCaption" then return false
-    elseif MWIIHUD.Toggle:GetBool() and MWIIHUD.HideCElements[name] and GetConVar("cl_drawhud"):GetBool() then return false end
+    if MWIIHUD.HideCElements[name] and GetConVar("cl_drawhud"):GetBool() then return false end -- sorry, performance
 end)
 hook.Add("HUDPaint", "MWIIHUDDraw", MWIIHUD.MainHook)
 hook.Add("OnScreenSizeChanged", "MWIIHUDResChange", MWIIHUD.NeededStuff)
