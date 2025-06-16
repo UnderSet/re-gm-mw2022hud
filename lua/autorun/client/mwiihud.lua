@@ -257,21 +257,21 @@ function MWIIHUD.GetFiremode(Weapon)
 		if Weapon:GetInUBGL() then
 			return 1, AltFiremodeText, true, false
 		else
-			local FiremodeText = string.upper(GetArcCWFiremodeName())
+			local FiremodeText = ""
 
             if arccw_mode.PrintName then
                 FiremodeText = ArcCW.GetPhraseFromString(fm.PrintName) and ArcCW.GetTranslation(phrase) or ArcCW.TryTranslation(fm.PrintName)
             else
-                if mode == 0 then FiremodeText = "Safety"
-                elseif mode == 1 then FiremodeText = "Single"
-                elseif mode >= 2 then FiremodeText = "Full Auto"
-                elseif mode < 0 then FiremodeText = tostring(-mode) .. "-Burst"
+                if arccw_mode.Mode == 0 then FiremodeText = "Safety"
+                elseif arccw_mode.Mode == 1 then FiremodeText = "Single"
+                elseif arccw_mode.Mode >= 2 then FiremodeText = "Full Auto"
+                elseif arccw_mode.Mode < 0 then FiremodeText = tostring(-arccw_mode.Mode) .. "-Burst"
                 end
             end
             if string.match(FiremodeText, "-ROUND BURST") then
                 string.Replace(FiremodeText, "-ROUND BURST", "-BURST")
             end
-            return arccw_mode.Mode, FiremodeText, false, arccw_mode.Mode == 0 and true or false
+            return arccw_mode.Mode >= 0 and arccw_mode.Mode or 3, FiremodeText, false, arccw_mode.Mode == 0 and true or false
 		end
 	elseif weapons.IsBasedOn(MWIIHUD.WepData.Class, "mg_base") then
 		local FiremodeText = Weapon.Firemodes[Weapon:GetFiremode()].Name -- Do we need two complicated tables for this?
