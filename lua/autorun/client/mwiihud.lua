@@ -7,6 +7,9 @@ local scrw, scrh = 0, 0
 local scale = 1
 local ply
 local wep
+local lastframewep
+local lastubstate
+local firetype, firemode, inubwep, safe = 0, "", false, false
 
 MWIIHUD.DebugReference = CreateClientConVar("MWIIHUD_Debug_DrawReference", 0, false, false, "debug: draw reference image, gives no shit about main toggle", 0, 4)
 MWIIHUD.DebugOffsets = CreateClientConVar("MWIIHUD_Debug_PrintOffsets", 0, false, false, "debug: print all weapon icon offsets", 0, 1)
@@ -41,6 +44,14 @@ MWIIHUD.HL2WeaponIconChara = { -- Stock HL2 gun icons use a FONT.
     weapon_stunstick = 'n',
 }
 
+MWIIHUD.DefaultAutomatics = {
+    ["weapon_smg1"] = true,
+	["weapon_ar2"] = true,
+	["weapon_mp5_hl1"] = true,
+	["weapon_gauss"] = true,
+	["weapon_egon"] = true
+}
+
 MWIIHUD.WeaponIconOffset = {}
 
 MWIIHUD.IconColorCorrectParam = {
@@ -56,7 +67,15 @@ MWIIHUD.IconColorCorrectParam = {
 }
 
 MWIIHUD.Assets = {}
-MWIIHUD.Assets.Reference = {{Material("mwii/reference/reference1.png", "noclamp smooth")}, {Material("mwii/reference/reference2.png", "noclamp smooth")}, {Material("mwii/reference/reference3.png", "noclamp smooth")}, {Material("mwii/reference/reference4.png", "noclamp smooth")}} -- there *has* to be a better fucking way
+MWIIHUD.Assets.Reference = {{Material("mwii/reference/reference1.png", "noclamp smooth")}, {Material("mwii/reference/reference2.png", "noclamp smooth")},
+    {Material("mwii/reference/reference3.png", "noclamp smooth")}, {Material("mwii/reference/reference4.png", "noclamp smooth")}} -- there *has* to be a better fucking way
+MWIIHUD.Assets.Firemodes = {
+    [0] = {Material("mwii/assets/firemodes/safe.png", "noclamp smooth")},
+    [1] = {Material("mwii/assets/firemodes/single.png", "noclamp smooth")},
+    [2] = {Material("mwii/assets/firemodes/burst2.png", "noclamp smooth")},
+    [3] = {Material("mwii/assets/firemodes/burst3.png", "noclamp smooth")},
+    [4] = {Material("mwii/assets/firemodes/auto.png", "noclamp smooth")} -- surely nobody uses a 4-burst firemode?
+}
 MWIIHUD.Assets.ArmorPlate = Material("mwii/assets/armorplate.png", "noclamp smooth")
 
 MWIIHUD.Colors.Preset = {}
@@ -207,6 +226,116 @@ function MWIIHUD.ParseCaption(soundscript, duration, fromplayer, text)
     end
 end
 
+function MWIIHUD.GetFiremode(Weapon)
+	if Weapon.ARC9 then -- Biggest blunder ever: forgor to change a9 to isarc9. bruh.
+		local arc9_mode = Weapon:GetCurrentFiremodeTable()
+		
+		if Weapon:GetUBGL() then
+            return Weapon:GetCurrentFiremode(), Weapon:GetProcessedValue("UBGLFiremodeName"), true, false
+		end
+
+        local FiremodeText = ""
+        if arc9_mode.PrintName then
+            FiremodeText = arc9_mode.PrintName
+        else
+		    if arc9_mode.Mode == 1 then
+		    	FiremodeText = "Single"
+		    elseif arc9_mode.Mode == 0 then
+		    	FiremodeText = "Safety"
+		    elseif arc9_mode.Mode < 0 then
+		    	FiremodeText = "Full Auto"
+		    elseif arc9_mode.Mode > 1 then
+		    	FiremodeText = tostring(arc9_mode.Mode) .. "-Burst"
+		    end
+        end
+        return arc9_mode.Mode >= 0 and arc9_mode.Mode or 4, FiremodeText, false, Weapon:GetSafe()
+	elseif Weapon.ArcCW then
+		local arccw_mode = Weapon:GetCurrentFiremode()
+
+		local AltFiremodeText = Weapon:GetBuff_Override("UBGL_PrintName") and Weapon:GetBuff_Override("UBGL_PrintName") or ArcCW.GetTranslation("fcg.ubgl")
+		
+		if Weapon:GetInUBGL() then
+			return 1, AltFiremodeText, true, false
+		else
+			local FiremodeText = string.upper(GetArcCWFiremodeName())
+
+            if arccw_mode.PrintName then
+                FiremodeText = ArcCW.GetPhraseFromString(fm.PrintName) and ArcCW.GetTranslation(phrase) or ArcCW.TryTranslation(fm.PrintName)
+            else
+                if mode == 0 then FiremodeText = "Safety"
+                elseif mode == 1 then FiremodeText = "Single"
+                elseif mode >= 2 then FiremodeText = "Full Auto"
+                elseif mode < 0 then FiremodeText = tostring(-mode) .. "-Burst"
+                end
+            end
+            if string.match(FiremodeText, "-ROUND BURST") then
+                string.Replace(FiremodeText, "-ROUND BURST", "-BURST")
+            end
+            return arccw_mode.Mode, FiremodeText, false, arccw_mode.Mode == 0 and true or false
+		end
+	elseif weapons.IsBasedOn(MWIIHUD.WepData.Class, "mg_base") then
+		local FiremodeText = Weapon.Firemodes[Weapon:GetFiremode()].Name -- Do we need two complicated tables for this?
+
+        if !Weapon.Primary.Automatic then
+            return 1, FiremodeText, false, false
+		elseif Weapon.ThreeRoundBurst then
+            return 3, FiremodeText, false, false
+		elseif Weapon.TwoRoundBurst then
+            return 2, FiremodeText, false, false
+		elseif Weapon.GetSafe then
+			if Weapon:GetSafe() then
+                return 0, FiremodeText, true, false
+			end
+		elseif isfunction(Weapon.Safe) then
+			if Weapon:Safe() then
+                return 0, FiremodeText, true, false
+			end
+		elseif isfunction(Weapon.Safety) then
+			if Weapon:Safety() then
+                return 0, FiremodeText, true, false
+			end
+        else
+            return 4, FiremodeText, false, false
+		end
+	--[[elseif istfabase then -- unsupported for now
+		FiremodeText = Weapon:GetFireModeName()
+		for k,v in pairs(TFAFiremodes) do
+			if k == FiremodeText then
+				FiremodeText = v
+			end
+		end]]
+	elseif Weapon:IsScripted() then
+		if !Weapon.Primary.Automatic then
+            return 1, "Semi-Auto", false, false
+		elseif Weapon.ThreeRoundBurst then
+            return 3, "3-Burst", false, false
+		elseif Weapon.TwoRoundBurst then
+            return 2, "2-Burst", false, false
+		elseif Weapon.GetSafe then
+			if Weapon:GetSafe() then
+                return 0, "Safety", true, false
+			end
+		elseif isfunction(Weapon.Safe) then
+			if Weapon:Safe() then
+                return 0, "Safety", true, false
+			end
+		elseif isfunction(Weapon.Safety) then
+			if Weapon:Safety() then
+                return 0, "Safety", true, false
+			end
+        else
+            return 4, "Full Auto", false, false
+		end
+	elseif !MWIIHUD.DefaultAutomatics[Weapon:GetClass()] then
+		return 1, "Semi-Auto", false, false
+    else
+        return 4, "Full Auto", false, false
+	end
+end
+
+
+-- real shit begins here
+
 function MWIIHUD.MainHook()
     ply = LocalPlayer()
 
@@ -234,6 +363,7 @@ function MWIIHUD.WeaponData()
 
     if !IsValid(wep) then return end
 
+    MWIIHUD.WepData.Class = wep:GetClass()
     MWIIHUD.WepData.PrintName = wep:GetPrintName()
     MWIIHUD.WepData.Mag1 = wep:Clip1()
     MWIIHUD.WepData.Mag1Max = wep:GetMaxClip1()
@@ -243,8 +373,10 @@ function MWIIHUD.WeaponData()
     MWIIHUD.WepData.Ammo2 = ply:GetAmmoCount(wep:GetSecondaryAmmoType())
     MWIIHUD.WepData.AmmoType1 = wep:GetPrimaryAmmoType()
     MWIIHUD.WepData.AmmoType2 = wep:GetSecondaryAmmoType()
+    MWIIHUD.WepData.TotalAmmo1 = MWIIHUD.WepData.Mag1 + MWIIHUD.WepData.Ammo1
+    MWIIHUD.WepData.TotalAmmo2 = MWIIHUD.WepData.Mag2 + MWIIHUD.WepData.Ammo2
 
-    lastframeammotype = wep:GetPrimaryAmmoType()-- hardcoded for now, alt ammo handling not available *yet*
+    lastframeammotype1 = wep:GetPrimaryAmmoType()-- hardcoded for now, alt ammo handling not available *yet*
 end
 
 function MWIIHUD.Vitals()
@@ -284,25 +416,59 @@ end
 
 function MWIIHUD.Ammo()
     if !IsValid(wep) then return end
+    lastubstate = inubwep
+
     draw.NoTexture()
     surface.SetDrawColor(MWIIHUD.Colors.Preset.Gray)
     surface.DrawRect(scrw - 150 * scale, scrh - 125 * scale, 2 * scale, 49 * scale)
     if MWIIHUD.WepData.AmmoType1 != -1 then -- not a melee weapon
-        draw.DrawText(MWIIHUD.WepData.Mag1, "MWIIAmmoText", scrw - 160 * scale, scrh - 132 * scale, (MWIIHUD.WepData.Mag1 < MWIIHUD.WepData.Mag1Max / 3) and MWIIHUD.Colors.Preset.OrangeRed or color_white, TEXT_ALIGN_RIGHT)
-        draw.DrawText(MWIIHUD.WepData.Ammo1, "MWIIAmmoSubText", scrw - 160 * scale, scrh - 91 * scale, MWIIHUD.WepData.Ammo1 == 0 and MWIIHUD.Colors.Preset.OrangeRed or MWIIHUD.Colors.Preset.Gray, TEXT_ALIGN_RIGHT)
+        firetype, firemode, inubwep, safe = MWIIHUD.GetFiremode(wep)
+        if firetype == -1 then firetype = 0 end
+        if inubwep then
+            draw.DrawText(MWIIHUD.WepData.Mag2, "MWIIAmmoText", scrw - 160 * scale, scrh - 132 * scale,
+                (MWIIHUD.WepData.Mag2 < MWIIHUD.WepData.Mag2Max / 3) and MWIIHUD.Colors.Preset.OrangeRed or color_white, TEXT_ALIGN_RIGHT)
+            draw.DrawText(MWIIHUD.WepData.Ammo2, "MWIIAmmoSubText", scrw - 160 * scale, scrh - 91 * scale,
+                MWIIHUD.WepData.Ammo2 == 0 and MWIIHUD.Colors.Preset.OrangeRed or MWIIHUD.Colors.Preset.Gray, TEXT_ALIGN_RIGHT)
+            if MWIIHUD.WepData.Mag2 == 0 and MWIIHUD.WepData.Ammo2 == 0 then
+                draw.DrawText("NO AMMO","MWIISubText",scrw * 0.5,scrh - 463 * scale,MWIIHUD.Colors.Preset.OrangeRed,TEXT_ALIGN_CENTER)
+            elseif MWIIHUD.WepData.Mag2 < MWIIHUD.WepData.Mag2Max / 3 and MWIIHUD.WepData.Ammo1 == 0 then
+                draw.DrawText("LOW AMMO","MWIISubText",scrw * 0.5,scrh - 463 * scale,MWIIHUD.Colors.Preset.Yellow,TEXT_ALIGN_CENTER)
+            elseif MWIIHUD.WepData.Mag2 < MWIIHUD.WepData.Mag2Max / 3 then
+                surface.SetFont("MWIISubText")
+                local w2, h = surface.GetTextSize(string.upper(input.LookupBinding("+reload")))
+                local w = w2 + select(1, surface.GetTextSize("RELOAD")) + 16 * scale
+                surface.SetDrawColor(255,255,255,255)
+                draw.RoundedBox(6, scrw * 0.5 - w * 0.5 - 6 * scale, scrh - 465 * scale, w2 + 12 * scale, h + 2 * scale, color_white)
+                draw.DrawText(string.upper(input.LookupBinding("+reload")), "MWIISubText", scrw * 0.5 - w * 0.5, scrh - 463 * scale, color_black)
+                draw.DrawText("RELOAD", "MWIISubText", scrw * 0.5 - w * 0.5 + w2 + 16 * scale, scrh - 463 * scale, color_white)
+            end
+        else
+            draw.DrawText(MWIIHUD.WepData.Mag1, "MWIIAmmoText", scrw - 160 * scale, scrh - 132 * scale,
+                (MWIIHUD.WepData.Mag1 < MWIIHUD.WepData.Mag1Max / 3) and MWIIHUD.Colors.Preset.OrangeRed or color_white, TEXT_ALIGN_RIGHT)
+            draw.DrawText(MWIIHUD.WepData.Ammo1, "MWIIAmmoSubText", scrw - 160 * scale, scrh - 91 * scale,
+                MWIIHUD.WepData.Ammo1 == 0 and MWIIHUD.Colors.Preset.OrangeRed or MWIIHUD.Colors.Preset.Gray, TEXT_ALIGN_RIGHT)
+            if MWIIHUD.WepData.Mag1 == 0 and MWIIHUD.WepData.Ammo1 == 0 then
+                draw.DrawText("NO AMMO","MWIISubText",scrw * 0.5,scrh - 463 * scale,MWIIHUD.Colors.Preset.OrangeRed,TEXT_ALIGN_CENTER)
+            elseif MWIIHUD.WepData.Mag1 < MWIIHUD.WepData.Mag1Max / 3 and MWIIHUD.WepData.Ammo1 == 0 then
+                draw.DrawText("LOW AMMO","MWIISubText",scrw * 0.5,scrh - 463 * scale,MWIIHUD.Colors.Preset.Yellow,TEXT_ALIGN_CENTER)
+            elseif MWIIHUD.WepData.Mag1 < MWIIHUD.WepData.Mag1Max / 3 then
+                surface.SetFont("MWIISubText")
+                local w2, h = surface.GetTextSize(string.upper(input.LookupBinding("+reload")))
+                local w = w2 + select(1, surface.GetTextSize("RELOAD")) + 16 * scale
+                surface.SetDrawColor(255,255,255,255)
+                draw.RoundedBox(6, scrw * 0.5 - w * 0.5 - 6 * scale, scrh - 465 * scale, w2 + 12 * scale, h + 2 * scale, color_white)
+                draw.DrawText(string.upper(input.LookupBinding("+reload")), "MWIISubText", scrw * 0.5 - w * 0.5, scrh - 463 * scale, color_black)
+                draw.DrawText("RELOAD", "MWIISubText", scrw * 0.5 - w * 0.5 + w2 + 16 * scale, scrh - 463 * scale, color_white)
+            end
+        end
 
-        if MWIIHUD.WepData.Mag1 == 0 and MWIIHUD.WepData.Ammo1 == 0 then
-            draw.DrawText("NO AMMO","MWIISubText",scrw * 0.5,scrh - 463 * scale,MWIIHUD.Colors.Preset.OrangeRed,TEXT_ALIGN_CENTER)
-        elseif MWIIHUD.WepData.Mag1 < MWIIHUD.WepData.Mag1Max / 3 and MWIIHUD.WepData.Ammo1 == 0 then
-            draw.DrawText("LOW AMMO","MWIISubText",scrw * 0.5,scrh - 463 * scale,MWIIHUD.Colors.Preset.Yellow,TEXT_ALIGN_CENTER)
-        elseif MWIIHUD.WepData.Mag1 < MWIIHUD.WepData.Mag1Max / 3 then
-            surface.SetFont("MWIISubText")
-            local w2, h = surface.GetTextSize(string.upper(input.LookupBinding("+reload")))
-            local w = w2 + select(1, surface.GetTextSize("RELOAD")) + 16 * scale
-            surface.SetDrawColor(255,255,255,255)
-            draw.RoundedBox(6, scrw * 0.5 - w * 0.5 - 6 * scale, scrh - 465 * scale, w2 + 12 * scale, h + 2 * scale, color_white)
-            draw.DrawText(string.upper(input.LookupBinding("+reload")), "MWIISubText", scrw * 0.5 - w * 0.5, scrh - 463 * scale, color_black)
-            draw.DrawText("RELOAD", "MWIISubText", scrw * 0.5 - w * 0.5 + w2 + 16 * scale, scrh - 463 * scale, color_white)
+        surface.SetMaterial(safe and MWIIHUD.Assets.Firemodes[0][1] or MWIIHUD.Assets.Firemodes[firetype][1])
+        surface.SetDrawColor(color_white)
+        surface.DrawTexturedRect(scrw - 345 * scale,scrh - 67 * scale,27 * scale,27 * scale)
+        draw.DrawText(safe and "Safety" or firemode, "MWIIAmmoSubText", scrw - 305 * scale,scrh - 65 * scale, color_white)
+        if MWIIHUD.WepData.AmmoType2 != -1 and wep:IsScripted() then
+            draw.DrawText(!inubwep and "Use Altfire | " .. MWIIHUD.WepData.TotalAmmo2 or "Exit Altfire | " .. MWIIHUD.WepData.TotalAmmo1,
+                "MWIIAmmoSubText", scrw - 305 * scale,scrh - 40 * scale, color_white)
         end
     end
 
@@ -320,10 +486,11 @@ function MWIIHUD.Ammo()
     if lastframewep != wep then
         MWIIHUD.Times.WepChangeTimeOut = CurTime() + 1.6
         MWIIHUD.Times.AmmoTypeFade = CurTime() + 1.6
-    elseif lastframeammotype != MWIIHUD.WepData.AmmoType1 then MWIIHUD.Times.AmmoTypeFade = CurTime() + 1.6 end
+    elseif lastframeammotype1 != MWIIHUD.WepData.AmmoType1 or lastubstate != inubwep then MWIIHUD.Times.AmmoTypeFade = CurTime() + 1.6 end
 
     MWIIHUD.Colors.AmmoName.a = 255 * (math.min(MWIIHUD.Times.AmmoTypeFade - CurTime(), 0) * 4 + 1)
-    draw.DrawText(MWIIHUD.WepData.AmmoType1 != -1 and language.GetPhrase(game.GetAmmoName(wep:GetPrimaryAmmoType())) or "Melee/Tool",
+    draw.DrawText(inubwep and (MWIIHUD.WepData.AmmoType2 != -1 and language.GetPhrase(game.GetAmmoName(MWIIHUD.WepData.AmmoType2)) or "Melee/Tool") or
+        (MWIIHUD.WepData.AmmoType1 != -1 and language.GetPhrase(game.GetAmmoName(MWIIHUD.WepData.AmmoType1)) or "Melee/Tool"),
         "MWIIAmmoSubText", scrw - 400 * scale, scrh - 177 * scale, MWIIHUD.Colors.AmmoName)
 
     MWIIHUD.Colors.WeaponName.a = 255 * (math.min(MWIIHUD.Times.WepChangeTimeOut - CurTime(), 0) * 4 + 1)
@@ -367,6 +534,7 @@ function MWIIHUD.Captions()
                 local drawtbl = {}
                 drawtbl[1] = {} -- thanks lua
                 local drawtbli = 1
+                local teststringlen = 0
                 for e=1,#MWIIHUD.CaptionCache[i][1] do
                     surface.SetFont("MWIISubText")
                     local texttbl = string.Explode(" ", MWIIHUD.CaptionCache[i][1][e][1], false)
@@ -377,16 +545,19 @@ function MWIIHUD.Captions()
                         if string.StartsWith(texttbl[f], "<cr>") then -- force a line break
                             drawtbl[drawtbli][#drawtbl[drawtbli] + 1] = {teststring, MWIIHUD.CaptionCache[i][1][e][2], surface.GetTextSize(teststring)}
                             teststring = string.Right(texttbl[f], string.len(texttbl[f]) - 4)
+                            teststringlen = 0
                             drawtbl[#drawtbl + 1] = {}
                             drawtbli = #drawtbl
-                        elseif surface.GetTextSize(teststring .. " " .. texttbl[f]) < scrw * 0.55 then
+                        elseif (select(1, surface.GetTextSize(teststring .. " " .. texttbl[f])) + teststringlen) < scrw * 0.55 then
                             teststring = teststring .. " " .. texttbl[f]
                             if f == #texttbl then
+                                teststringlen = teststringlen + select(1, surface.GetTextSize(teststring))
                                 drawtbl[drawtbli][#drawtbl[drawtbli] + 1] = {teststring, MWIIHUD.CaptionCache[i][1][e][2], surface.GetTextSize(teststring)}    
                             end
                         else
                             drawtbl[drawtbli][#drawtbl[drawtbli] + 1] = {teststring, MWIIHUD.CaptionCache[i][1][e][2], surface.GetTextSize(teststring)}
                             teststring = texttbl[f]
+                            teststringlen = 0
                             drawtbl[#drawtbl + 1] = {}
                             drawtbli = #drawtbl
                         end
@@ -405,7 +576,6 @@ function MWIIHUD.Captions()
                     end
                     linecount = linecount + 1
                 end
-
             end
         end
 
