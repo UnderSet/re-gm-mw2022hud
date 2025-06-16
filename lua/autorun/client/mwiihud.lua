@@ -465,7 +465,8 @@ function MWIIHUD.Ammo()
         surface.SetMaterial(safe and MWIIHUD.Assets.Firemodes[0][1] or MWIIHUD.Assets.Firemodes[firetype][1])
         surface.SetDrawColor(color_white)
         surface.DrawTexturedRect(scrw - 345 * scale,scrh - 67 * scale,27 * scale,27 * scale)
-        draw.DrawText(safe and "Safety" or firemode, "MWIIAmmoSubText", scrw - 305 * scale,scrh - 65 * scale, color_white)
+        draw.DrawText(safe and "Safety" or (firemode .. (GetConVar("developer"):GetBool() and " | " .. firetype or "")), "MWIIAmmoSubText",
+            scrw - 305 * scale,scrh - 65 * scale, color_white)
         if MWIIHUD.WepData.AmmoType2 != -1 and wep:IsScripted() then
             draw.DrawText(!inubwep and "Use Altfire | " .. MWIIHUD.WepData.TotalAmmo2 or "Exit Altfire | " .. MWIIHUD.WepData.TotalAmmo1,
                 "MWIIAmmoSubText", scrw - 305 * scale,scrh - 40 * scale, color_white)
