@@ -234,6 +234,7 @@ function MWIIHUD.WeaponData()
 
     if !IsValid(wep) then return end
 
+    MWIIHUD.WepData.PrintName = wep:GetPrintName()
     MWIIHUD.WepData.Mag1 = wep:Clip1()
     MWIIHUD.WepData.Mag1Max = wep:GetMaxClip1()
     MWIIHUD.WepData.Mag2 = wep:Clip2()
@@ -326,7 +327,7 @@ function MWIIHUD.Ammo()
         "MWIIAmmoSubText", scrw - 400 * scale, scrh - 177 * scale, MWIIHUD.Colors.AmmoName)
 
     MWIIHUD.Colors.WeaponName.a = 255 * (math.min(MWIIHUD.Times.WepChangeTimeOut - CurTime(), 0) * 4 + 1)
-    draw.DrawText(wep:GetPrintName(), "MWIIAmmoSubText", scrw - 400 * scale, scrh - 200 * scale, MWIIHUD.Colors.WeaponName)
+    draw.DrawText(MWIIHUD.WepData.PrintName, "MWIIAmmoSubText", scrw - 400 * scale, scrh - 200 * scale, MWIIHUD.Colors.WeaponName)
 end
 
 function MWIIHUD.Captions()
