@@ -6,9 +6,9 @@ Attempt at recreating the Call of Duty: Modern Warfare II HUD in Garry's Mod wit
 |Will do|Probably?|Just...*no* (never)|
 |---|---|---|
 |~~Health and armor display~~|Killfeed|Minimap|
-|~~Weapon display~~ *(~~main display~~, ~~firemode and altfire~~, ~~weapon icon~~)*|Objective elements|Objective notifications *(top-right)*|
+|~~Weapon display~~ *(~~main display~~, ~~firemode and altfire~~ [^1], ~~weapon icon~~)*|Objective elements|Objective notifications *(top-right)*|
 |Compass *(working, gradient BG)*|Calling cards|System info display things *("telemetry")*|
-|~~Subtitles~~ *(~~parsing text (basic)~~, ~~drawing~~, ~~multi-tag handling~~)* [^1]| |Player account ID display|
+|~~Subtitles~~ *(~~parsing text (basic)~~, ~~drawing~~, ~~multi-tag handling~~)* [^2]| |Player account ID display|
 
 *Crossed out means done unless in 3rd column.*
 
@@ -24,4 +24,5 @@ Font is Stratum 2, and is copyright Eric Olson.
 ## Credits
 - *Infinity Ward* and *Activision* for [*Call of Duty: Modern Warfare II*](https://www.callofduty.com/store/games/modernwarfare2), which was the inspiration and reference for this HUD.
 
-[^1]: Obviously won't be identical to MWII due to how Source subtitles are.
+[^1]: Supported weapon bases: ARC9, ArcCW, Modern Warfare Base
+[^2]: Obviously won't be identical to MWII due to how Source subtitles are.
