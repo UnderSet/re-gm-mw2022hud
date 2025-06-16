@@ -240,6 +240,8 @@ function MWIIHUD.WeaponData()
     MWIIHUD.WepData.Mag2Max = wep:GetMaxClip2()
     MWIIHUD.WepData.Ammo1 = ply:GetAmmoCount(wep:GetPrimaryAmmoType())
     MWIIHUD.WepData.Ammo2 = ply:GetAmmoCount(wep:GetSecondaryAmmoType())
+    MWIIHUD.WepData.AmmoType1 = wep:GetPrimaryAmmoType()
+    MWIIHUD.WepData.AmmoType2 = wep:GetSecondaryAmmoType()
 
     lastframeammotype = wep:GetPrimaryAmmoType()-- hardcoded for now, alt ammo handling not available *yet*
 end
@@ -284,7 +286,7 @@ function MWIIHUD.Ammo()
     draw.NoTexture()
     surface.SetDrawColor(MWIIHUD.Colors.Preset.Gray)
     surface.DrawRect(scrw - 150 * scale, scrh - 125 * scale, 2 * scale, 49 * scale)
-    if MWIIHUD.WepData.Mag1Max != -1 then
+    if MWIIHUD.WepData.AmmoType1 != -1 then -- not a melee weapon
         draw.DrawText(MWIIHUD.WepData.Mag1, "MWIIAmmoText", scrw - 160 * scale, scrh - 132 * scale, (MWIIHUD.WepData.Mag1 < MWIIHUD.WepData.Mag1Max / 3) and MWIIHUD.Colors.Preset.OrangeRed or color_white, TEXT_ALIGN_RIGHT)
         draw.DrawText(MWIIHUD.WepData.Ammo1, "MWIIAmmoSubText", scrw - 160 * scale, scrh - 91 * scale, MWIIHUD.WepData.Ammo1 == 0 and MWIIHUD.Colors.Preset.OrangeRed or MWIIHUD.Colors.Preset.Gray, TEXT_ALIGN_RIGHT)
 
@@ -317,10 +319,10 @@ function MWIIHUD.Ammo()
     if lastframewep != wep then
         MWIIHUD.Times.WepChangeTimeOut = CurTime() + 1.6
         MWIIHUD.Times.AmmoTypeFade = CurTime() + 1.6
-    elseif lastframeammotype != wep:GetPrimaryAmmoType() then MWIIHUD.Times.AmmoTypeFade = CurTime() + 1.6 end
+    elseif lastframeammotype != MWIIHUD.WepData.AmmoType1 then MWIIHUD.Times.AmmoTypeFade = CurTime() + 1.6 end
 
     MWIIHUD.Colors.AmmoName.a = 255 * (math.min(MWIIHUD.Times.AmmoTypeFade - CurTime(), 0) * 4 + 1)
-    draw.DrawText(MWIIHUD.WepData.Mag1Max != -1 and game.GetAmmoName(wep:GetPrimaryAmmoType()) or "Melee/Tool",
+    draw.DrawText(MWIIHUD.WepData.AmmoType1 != -1 and language.GetPhrase(game.GetAmmoName(wep:GetPrimaryAmmoType())) or "Melee/Tool",
         "MWIIAmmoSubText", scrw - 400 * scale, scrh - 177 * scale, MWIIHUD.Colors.AmmoName)
 
     MWIIHUD.Colors.WeaponName.a = 255 * (math.min(MWIIHUD.Times.WepChangeTimeOut - CurTime(), 0) * 4 + 1)
