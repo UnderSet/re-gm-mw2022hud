@@ -278,7 +278,7 @@ function MWIIHUD.GetFiremode(Weapon)
             if string.match(FiremodeText, "-ROUND BURST") then
                 string.Replace(FiremodeText, "-ROUND BURST", "-BURST")
             end
-            return arccw_mode.Mode >= 0 and arccw_mode.Mode or 3, FiremodeText, false, arccw_mode.Mode == 0 and true or false
+            return arccw_mode.Mode >= 2 and 4 or arccw_mode.Mode >= 0 and arccw_mode.Mode or 3, FiremodeText, false, arccw_mode.Mode == 0 and true or false
 		end
 	elseif weapons.IsBasedOn(MWIIHUD.WepData.Class, "mg_base") then
 		local FiremodeText = Weapon.Firemodes[Weapon:GetFiremode()].Name -- Do we need two complicated tables for this?
