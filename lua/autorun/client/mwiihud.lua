@@ -233,7 +233,8 @@ function MWIIHUD.ParseCaption(soundscript, duration, fromplayer, text)
 end
 
 function MWIIHUD.GetFiremode(Weapon)
-	if Weapon.ARC9 then -- Biggest blunder ever: forgor to change a9 to isarc9. bruh.
+    -- fuck this code I don't wanna touch any of this
+	if Weapon.ARC9 then
 		local arc9_mode = Weapon:GetCurrentFiremodeTable()
 		
 		if Weapon:GetUBGL() then
