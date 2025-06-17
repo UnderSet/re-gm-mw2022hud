@@ -16,7 +16,7 @@ MWIIHUD.DebugOffsets = CreateClientConVar("MWIIHUD_Debug_PrintOffsets", 0, false
 MWIIHUD.DebugCaptionParsing = CreateClientConVar("MWIIHUD_Debug_CaptionDebugText", 0, false, false, "debug: use debug string for captions instead of actual caption content", 0, 1)
 MWIIHUD.Toggle = CreateClientConVar("MWIIHUD_Enable", 1, true, false, "Enables the HUD.", 0, 1)
 MWIIHUD.ToggleCaptions = CreateClientConVar("MWIIHUD_EnableCaptions", 0, true, false, "Enables the custom captions implementation this HUD has.")
-MWIIHUD.ToggleCaptionAesthetics = CreateClientConVar("MWIIHUD_EnableCaptionAestheticEdits", 0, false, false, "Allows extra formatting captions during parsing to look nicer. (only affects stuff like e.g replacing double spaces with single spaces)", 0, 1)
+MWIIHUD.ToggleCaptionAesthetics = CreateClientConVar("MWIIHUD_EnableCaptionAestheticEdits", 0, true, false, "Allows extra formatting captions during parsing to look nicer. (only affects stuff like e.g replacing double spaces with single spaces)", 0, 1)
 MWIIHUD.CaptionsShowSFX = CreateClientConVar("MWIIHUD_EnableCaptionsSFX", 0, true, false, "Show SFX on captions. Looks really ugly, keep this off most of the time please.")
 
 MWIIHUD.HideCElements = {
