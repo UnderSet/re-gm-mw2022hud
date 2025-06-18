@@ -229,6 +229,12 @@ function MWIIHUD.ParseCaption(soundscript, duration, fromplayer, text)
         end
 
         MWIIHUD.CaptionCache[#MWIIHUD.CaptionCache + 1] = {outtable, CurTime() + duration}
+
+        for i = #MWIIHUD.CaptionCache, 1, -1 do
+            for e=1,#MWIIHUD.CaptionCache[i][1] do
+                MWIIHUD.CaptionCache[i][1][e][1] = string.Trim(MWIIHUD.CaptionCache[i][1][e][1])
+            end
+        end
     end
 end
 
