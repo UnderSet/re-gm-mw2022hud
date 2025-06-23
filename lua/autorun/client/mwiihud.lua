@@ -70,7 +70,7 @@ MWIIHUD.IconColorCorrectParam = {
 MWIIHUD.Assets = {}
 MWIIHUD.Assets.Reference = {{Material("mwii/reference/reference1.png", "noclamp smooth")}, {Material("mwii/reference/reference2.png", "noclamp smooth")},
     {Material("mwii/reference/reference3.png", "noclamp smooth")}, {Material("mwii/reference/reference4.png", "noclamp smooth")}} -- there *has* to be a better fucking way
-MWIIHUD.Assets.Firemodes = {
+MWIIHUD.Assets.Firemodes = { -- lua tables start on 1 lmao
     [0] = {Material("mwii/assets/firemodes/safe.png", "noclamp smooth")},
     [1] = {Material("mwii/assets/firemodes/single.png", "noclamp smooth")},
     [2] = {Material("mwii/assets/firemodes/burst2.png", "noclamp smooth")},
@@ -78,6 +78,7 @@ MWIIHUD.Assets.Firemodes = {
     [4] = {Material("mwii/assets/firemodes/auto.png", "noclamp smooth")} -- surely nobody uses a 4-burst firemode?
 }
 MWIIHUD.Assets.ArmorPlate = Material("mwii/assets/armorplate.png", "noclamp smooth")
+MWIIHUD.Assets.Gradients = {{Material("gui/gradient_up")}, {Material("gui/center_gradient")}}
 
 MWIIHUD.Colors.Preset = {}
 MWIIHUD.Colors.Preset.OrangeRed = Color(190,80,42,255)
@@ -86,6 +87,8 @@ MWIIHUD.Colors.Preset.Gray = Color(154,163,154,255)
 
 MWIIHUD.Colors.WeaponName = Color(255,255,255,255)
 MWIIHUD.Colors.AmmoName = Color(144,144,144)
+
+MWIIHUD.Colors.CompassColor = Color(255,255,255,255) -- color = color_white breaks loads of shit lmfao
 
 MWIIHUD.CaptionCache = {} -- trust me this is a good idea (watch future me regret this lmao)
 
@@ -120,25 +123,37 @@ function MWIIHUD.NeededStuff()
         weight = 240
     })
     surface.CreateFont( "MWIIAmmoText", {
-        font = "Stratum2 BETA Medium", -- Use the font-name which is shown to you by your operating system Font Viewer.
+        font = "Stratum2 BETA Medium",
         size = 50 * scale,
         weight = 60,
         shadow = true,
     })
     surface.CreateFont( "MWIIAmmoSubText", {
-        font = "Stratum2 BETA Medium", -- Use the font-name which is shown to you by your operating system Font Viewer.
+        font = "Stratum2 BETA Medium",
         size = 25 * scale,
         weight = 60,
         shadow = true,
     })
     surface.CreateFont( "MWIISubText", {
-        font = "Stratum2 BETA Medium", -- Use the font-name which is shown to you by your operating system Font Viewer.
+        font = "Stratum2 BETA Medium",
         size = 28 * scale,
         weight = 60,
         shadow = true,
     })
+    surface.CreateFont( "MWIICompassText", {
+        font = "Stratum2 BETA Medium",
+        size = 24 * scale,
+        weight = 60,
+        shadow = true,
+    })
+    surface.CreateFont( "MWIICompassSubText", {
+        font = "Stratum2 BETA Medium",
+        size = 18 * scale,
+        weight = 60,
+        shadow = true,
+    })
     surface.CreateFont( "MWIINickText", {
-        font = "Roboto", -- Use the font-name which is shown to you by your operating system Font Viewer.
+        font = "Roboto",
         size = 20 * scale,
         weight = 60,
         shadow = true,
@@ -351,6 +366,7 @@ end
 
 function MWIIHUD.MainHook()
     ply = LocalPlayer()
+    local starttime = SysTime()
 
     local dev = GetConVar("developer"):GetBool()
     if dev and MWIIHUD.DebugReference:GetBool() then
@@ -363,11 +379,12 @@ function MWIIHUD.MainHook()
     if MWIIHUD.Toggle:GetBool() and GetConVar("cl_drawhud"):GetBool() then
         MWIIHUD.WeaponData()
         MWIIHUD.Vitals()
-        --MWIIHUD.Compass()
+        MWIIHUD.Compass()
         MWIIHUD.Ammo()
 
         MWIIHUD.Captions()
     end
+    print("took " .. SysTime() - starttime)
 end
 
 function MWIIHUD.WeaponData()
@@ -598,6 +615,41 @@ function MWIIHUD.Captions()
         end
     end
 end
+
+function MWIIHUD.Compass()
+    local startcmptime = SysTime()
+    -- fuck this shit fuck this shit fuck this shit
+    local eyeangle = math.Remap(EyeAngles().y, -180, 180, -360, 0)
+    local cardinaltext = ""
+    
+    for i=1,#MWIIHUD.CompassAngles do
+        MWIIHUD.Colors.CompassColor.a = 255 * (math.max(1 - (math.max(math.abs(math.AngleDifference(-eyeangle, MWIIHUD.CompassAngles[i])) - 25, 0)) * 0.25, 0))
+        draw.DrawText(MWIIHUD.CompassAngles[i], "MWIICompassSubText",
+        scrw / 2 - math.floor(math.AngleDifference(-eyeangle, MWIIHUD.CompassAngles[i]) * scale * 13.5),
+        15 * scale, MWIIHUD.Colors.CompassColor, TEXT_ALIGN_CENTER)
+    end
+
+    -- 67.5 is 135 / 2 is 45 * 3 / 2 (lmao)
+    if (math.abs(math.AngleDifference(-eyeangle, 0))) < 67.5 then cardinaltext = cardinaltext .. "N"
+    elseif (math.abs(math.AngleDifference(-eyeangle, 180))) < 67.5 then cardinaltext = cardinaltext .. "S" end
+    if (math.abs(math.AngleDifference(-eyeangle, 90))) < 67.5 then cardinaltext = cardinaltext .. "E"
+    elseif (math.abs(math.AngleDifference(-eyeangle, 270))) < 67.5 then cardinaltext = cardinaltext .. "W" end
+
+    
+    surface.SetDrawColor(color_white)
+    surface.DrawRect(scrw / 2 - 1 * scale, 40 * scale, 2 * scale, 20 * scale)
+    surface.SetMaterial(MWIIHUD.Assets.Gradients[1][1])
+    surface.DrawTexturedRect(scrw / 2 - 1 * scale, 20 * scale, 2 * scale, 20 * scale)
+    surface.SetMaterial(MWIIHUD.Assets.Gradients[2][1])
+    surface.DrawTexturedRect(scrw / 2 - 320 * scale, 40 * scale, 640 * scale, 2 * scale)
+
+    draw.DrawText(math.floor(-eyeangle), "MWIICompassText", scrw / 2 + 4 * scale, 43 * scale, color_white, TEXT_ALIGN_LEFT)
+    draw.DrawText(cardinaltext, "MWIICompassText", scrw / 2 - 4 * scale, 43 * scale, color_white, TEXT_ALIGN_RIGHT)
+
+    print("took " .. SysTime() - startcmptime .. " for compass")
+end
+
+MWIIHUD.CompassAngles = {0,15,30,45,60,75,90,105,120,135,150,165,180,195,210,225,240,255,270,285,300,315,330,345} 
 
 hook.Add("OnCloseCaptionEmit", "MWIIGrabCaption", MWIIHUD.ParseCaption)
 hook.Add("HUDShouldDraw", "MWIIHideCHud", function(name)
