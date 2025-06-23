@@ -273,7 +273,7 @@ function MWIIHUD.GetFiremode(Weapon)
 			local FiremodeText = ""
 
             if arccw_mode.PrintName then
-                FiremodeText = ArcCW.GetPhraseFromString(fm.PrintName) and ArcCW.GetTranslation(phrase) or ArcCW.TryTranslation(fm.PrintName)
+                FiremodeText = ArcCW.GetPhraseFromString(arccw_mode.PrintName) and ArcCW.GetTranslation(phrase) or ArcCW.TryTranslation(arccw_mode.PrintName)
             else
                 if arccw_mode.Mode == 0 then FiremodeText = "Safety"
                 elseif arccw_mode.Mode == 1 then FiremodeText = "Single"
