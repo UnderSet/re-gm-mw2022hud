@@ -26,3 +26,5 @@ Font is Stratum 2, and is copyright Eric Olson.
 
 [^1]: Supported weapon bases: ARC9, ArcCW, Modern Warfare Base
 [^2]: Obviously won't be identical to MWII due to how Source subtitles are.
+
+Check out [gmcaptions](https://github.com/underset/gmcaptions), an improved standalone version of this addon's subtitle rendering implementation. I likely won't be updating the version here.
