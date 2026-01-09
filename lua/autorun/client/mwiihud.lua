@@ -26,6 +26,8 @@ MWIIHUD.MWBaseFiretypes = {
 	["FULL AUTO"] = 4,
 	["SEMI AUTO"] = 1,
 	["SEMI AUTOMATIC"] = 1,
+    ["BOLT ACTION"] = 1,
+    ["PUMP-ACTION"] = 1,
 	["3RND BURST"] = 3
 }
 
@@ -330,7 +332,7 @@ function MWIIHUD.GetFiremode(Weapon, SeparateAltfire)
 		local FiremodeText = string.upper(Weapon.Firemodes[Weapon:GetFiremode()].Name)
 
         if !Weapon:HasFlag("Lowered") then
-            return MWIIHUD.MWBaseFiretypes[FiremodeText], FiremodeText, false, false, "Altfire"
+            return MWIIHUD.MWBaseFiretypes[FiremodeText] or 4, FiremodeText, false, false, "Altfire"
         else
             return 0, "Lowered", false, true, "Altfire"
 		end
