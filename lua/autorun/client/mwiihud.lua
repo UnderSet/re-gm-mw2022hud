@@ -331,10 +331,12 @@ function MWIIHUD.GetFiremode(Weapon, SeparateAltfire)
 	elseif weapons.IsBasedOn(Weapon:GetClass(), "mg_base") then -- biggest oversight in my life here
 		local FiremodeText = string.upper(Weapon.Firemodes[Weapon:GetFiremode()].Name)
 
+		local AltFiremodeText = Weapon:GetUnderbarrel() != nil and Weapon:GetUnderbarrel().Name or ""
+
         if !Weapon:HasFlag("Lowered") then
-            return MWIIHUD.MWBaseFiretypes[FiremodeText] or 4, FiremodeText, false, false, "Altfire"
+            return MWIIHUD.MWBaseFiretypes[FiremodeText] or 4, FiremodeText, Weapon:HasFlag("UsingUnderbarrel"), false, AltFiremodeText
         else
-            return 0, "Lowered", false, true, "Altfire"
+            return 0, "Lowered", false, true, AltFiremodeText
 		end
 	--[[elseif istfabase then -- unsupported for now
 		FiremodeText = Weapon:GetFireModeName()
